@@ -77,3 +77,16 @@ if __name__ == '__main__':
     print ">>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<"
     c = SerializeObject.unserialize(jsonsdata, serializetype='json')
     print c
+    
+    # shelve 序列化类和类实例
+    import shelve
+    
+    with shelve.open('bb') as f:
+        f['person'] = {'age': 23, 'name': 'shelve'}
+        # f['person']['age'] = 44  # 此用此方式修改对应的值无法更新已存储在person值.可以给open函数提供一个wirteback=True参数进行修改存储更新
+        # f['number'] = [i for i in range(10)]
+    #
+    # with shelve.open('aa') as f:
+    #     dic = f['person']
+    #     print dic
+    #     print f['number']
