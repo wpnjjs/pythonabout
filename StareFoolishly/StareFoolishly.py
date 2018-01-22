@@ -6,27 +6,26 @@
 @time: 2018/1/5 下午1:15
 '''
 
-import random
+import random, copy
 
 
 class Card(object):
-    def __init__(self, number=54, pairs=1):
-        self.number = number
+    def __init__(self, jokerneed=True, pairs=1):
+        self.number = 54 * pairs
         self.pairs = pairs
-        self.suits = ['r', 'b', 's', 'd', 'c']
+        self.suits = ['r', 'b', 's', 'd', 'j']
+        self.jokerslist = ['j0', 'j1']
         self.cardslist = [
-            're', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'ra', 'rb', 'rc', 'rd',
-            'be', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'ba', 'bb', 'bc', 'bd',
-            'se', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 'sa', 'sb', 'sc', 'sd',
-            'de', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'da', 'db', 'dc', 'dd',
-        
+            'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'ra', 'rb', 'rc', 'rd', 're',
+            'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'ba', 'bb', 'bc', 'bd', 'be',
+            's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 'sa', 'sb', 'sc', 'sd', 'se',
+            'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'da', 'db', 'dc', 'dd', 'de',
         ]
-    
-    #     'c0', 'c1',
+        self.cardslist.extend(self.jokerslist) if jokerneed else self.cardslist
+        self.cardslist *= pairs
     
     def deal(self, cardnumber):
         print "cardnumber", cardnumber
-        self.shufflecard()
         number = cardnumber
         dealcards = []
         while number != 0:
@@ -37,37 +36,74 @@ class Card(object):
     
     def shufflecard(self):
         random.shuffle(self.cardslist)
+        random.shuffle(self.cardslist)
     
     def getleavecards(self):
         return self.cardslist
+    
+    def getleavecardsNO(self):
+        return len(self.cardslist)
 
 
-class StareFoolishly(object):
+class StareFoolishly(Card):
     def __init__(self):
-        self.cardpriority = "3456789abcde2"
-        self.joker = 'c'
+        self.events = {"deal": 0, "get": 1, "put": 2, "pass": 3, "balance": 4}
+        self.cardpriority = "3456789abcde201"  # 牌值大小
+        self.joker = 'j'  # 癞子
         self.cardstype = {"sola": 0,  # 单张
                           "pair": 1,  # 对子
                           # "straight_pair": 2,  # 对子
                           "straight": 2,  # 顺子
-                          "bomb": 3,  # 炸弹
-                          }
+                          "boom": 3,  # 炸弹
+                          }  # 可出的牌型
+        self.leftcards = []  # 剩余牌
+        self.leftcardsno = 0  # 剩余排数
+        self.deskno = ""  # 桌号
+        self.playerno = 0  # 玩家个数
+        self.winner = ""  # 赢家
+        self.playerlist = [None, ] * 6  # 玩家列表
+        self.gamingplayerlist = []  # 游戏中的玩家
+        self.playermapcardsinhands = {}  # 玩家和手牌映射关系
+        self.playermapputcards = {}  # 玩家和出牌映射关系
+        self.playermapgetcards = {}  # 玩家和摸排映射关系
+        self.trustshiplist = []  # 玩家托管列表
+        self.outlinelist = []  # 玩家离线列表
+        self.eventsrecord = []  # 事件记录[uid, event, cards, cardtype, message（可选）]
+        self.currentplayer = ""  # 当前玩家
     
-    def check_cards_type(self, cards):
-        if len(cards) == 1:
-            return
-        if len(cards) == 2 and True:
-            pass
+    def createdesk(self):
+        number = list("0123456789") * 6
+        idx = random.randint(0, 54)
+        self.deskno = ''.join(number[idx:idx])
     
-    def tips_put(self, cardsinhand, putcards=None):
-        exceptjoker = [c for c in cardsinhand if c[0] != 'c']
-        numlistofexceptjoker = [n[1] for n in exceptjoker]
-        setnumstrofcards = ''.join(sorted(list(set(numlistofexceptjoker))))
+    def join(self):
+        self.playerlist = ['1', '2', '3', '4', '5', '6']
+        self.winner = '1'
+    
+    def dealcard(self):
+        self.gamingplayerlist = copy.deepcopy(self.playerlist)
+        card = Card()
+        card.shufflecard()
+        for p in self.gamingplayerlist:
+            if p == self.winner:
+                self.playermapcardsinhands.update(
+                        {p: sorted(card.deal(6),
+                                   key=lambda x: self.cardpriority.index(x[1]) + card.suits.index(x[0]) * 0.1,
+                                   reverse=True)})
+            else:
+                self.playermapcardsinhands.update(
+                        {p: sorted(card.deal(5),
+                                   key=lambda x: self.cardpriority.index(x[1]) + card.suits.index(x[0]) * 0.1,
+                                   reverse=True)})
+        self.leftcards = card.getleavecards()
+    
+    def tips_put(self, putcards=None):
+        tips = []
+        result = None
         if putcards:
-            pass
-        else:
-            lenofinhandlist = len(cardsinhand)
-            lenofinhandset = len(set(cardsinhand))
+            result = self.checkputcardstypeandnext(putcards)
+        self.getnext(result)
+        tips
     
     def getstraight(self, cards):
         '''
@@ -148,7 +184,7 @@ class StareFoolishly(object):
         print "result>>************************************************************************", result
         return result
     
-    def getbomb(self, cards):
+    def getboom(self, cards):
         '''
         分析手牌中的炸弹
         :param cards: 手牌
@@ -158,19 +194,19 @@ class StareFoolishly(object):
         noofcardsexceptjokers = [n for n in noofcards if n not in ['0', '1']]
         jokerno = [n for n in noofcards if n in ['0', '1']]
         strofcardno = ''.join(sorted(list(set(noofcardsexceptjokers))))
-        bombanalysisresult = []
+        boomanalysisresult = []
         for i in range(len(strofcardno)):
             if noofcards.count(strofcardno[i]) > 2:
-                bombanalysisresult.append(strofcardno[i] * noofcards.count(strofcardno[i]))
+                boomanalysisresult.append(strofcardno[i] * noofcards.count(strofcardno[i]))
         if len(jokerno):
             for ii in range(len(strofcardno)):
                 if noofcards.count(strofcardno[i]) > 1:
-                    bombanalysisresult.append(strofcardno[i] * noofcards.count(strofcardno[i]) + jokerno[0])
+                    boomanalysisresult.append(strofcardno[i] * noofcards.count(strofcardno[i]) + jokerno[0])
         elif len(jokerno) == 2:
             for ii in range(len(strofcardno)):
                 if noofcards.count(strofcardno[i]) > 0:
-                    bombanalysisresult.append(strofcardno[i] * noofcards.count(strofcardno[i]) + ''.join(jokerno))
-        result = sorted(list(set(bombanalysisresult)), key=lambda x: len(x), reverse=True)
+                    boomanalysisresult.append(strofcardno[i] * noofcards.count(strofcardno[i]) + ''.join(jokerno))
+        result = sorted(list(set(boomanalysisresult)), key=lambda x: len(x), reverse=True)
         return result
     
     def getpairs(self, cards):
@@ -203,7 +239,7 @@ class StareFoolishly(object):
                   "pair": 1,  # 对子
                   # "straight_pair": 2,  # 对子
                   "straight": 2,  # 顺子
-                  "bomb": 3,  # 炸弹
+                  "boom": 3,  # 炸弹
                   }
         '''
         noofcards = [c[1] for c in cards]
@@ -217,19 +253,19 @@ class StareFoolishly(object):
                 nextput.extend([self.cardpriority[self.cardpriority.index(noofcards[0]) + 1], '2'])
             nextput = list(set(nextput))
             nextput = sorted(nextput, key=lambda x: self.cardpriority.index(x))
-            nextput.append('bomb')
+            nextput.append('boom')
             return [self.cardstype["sola"], nextput]
         if lenght == 2:
             if self.cardpriority.index(noofcardsexceptjokers[0]) + 1 != len(self.cardpriority):
                 nextput.extend([self.cardpriority[self.cardpriority.index(noofcardsexceptjokers[0]) + 1] * 2, '22'])
             nextput = list(set(nextput))
             nextput = sorted(nextput, key=lambda x: self.cardpriority.index(x[0]))
-            nextput.append('bomb')
+            nextput.append('boom')
             return [self.cardstype["pair"], nextput]
         if lenght > 2:
             if len(set(noofcardsexceptjokers)) == 1:
-                nextput.append('bomb')
-                return [self.cardstype["bomb"], [lenght, noofcardsexceptjokers[0]]]
+                nextput.append('boom')
+                return [self.cardstype["boom"], [lenght, noofcardsexceptjokers[0]]]
             else:
                 # mincno = min(noofcardsexceptjokers)
                 maxcno = max(noofcardsexceptjokers)
@@ -269,32 +305,42 @@ class StareFoolishly(object):
                                 if maxcno != 'e':
                                     indexofmax = self.cardpriority.index(maxcno)
                                     nextput.append(self.cardpriority[indexofmax - lenght + 2:indexofmax + 2])
-                    # never in this branch
-                    # else:
-                    #     indexofmax = self.cardpriority.index(mincno) + lenght
-                    #     if self.cardpriority.index('e') >indexofmax:
-                    #         nextput.append(self.cardpriority[indexofmax - lenght + 2:indexofmax + 2])
+                                    # never in this branch
+                                    # else:
+                                    #     indexofmax = self.cardpriority.index(mincno) + lenght
+                                    #     if self.cardpriority.index('e') >indexofmax:
+                                    #         nextput.append(self.cardpriority[indexofmax - lenght + 2:indexofmax + 2])
                 else:
                     finalno = maxcno
                 if finalno != 'e':
                     indexofmax = self.cardpriority.index(finalno)
                     nextput.append(self.cardpriority[indexofmax - lenght + 2:indexofmax + 2])
-                nextput.append('bomb')
+                nextput.append('boom')
                 return [self.cardstype["straight"], nextput]
     
-    def getnext(self, cards):
-        pass
+    def getnext(self, rst):
+        print rst
+        if rst:
+            pass
+        else:
+            if '3' in
+
+
+class Control(object):
+    pass
 
 
 if __name__ == "__main__":
-    for i in range(100):
-        card = Card()
-        cadeal = card.deal(random.randint(1, 6))
-        print "deal cards", cadeal
-        noofcards = [c[1] for c in cadeal]
-        strnoofcards = ''.join(sorted(list(set(noofcards))))
-        print "noofcards", noofcards, strnoofcards
-        jokerlist = ['0', '1']
-        jokerc = jokerlist[:random.randint(0, 2)]
-        print "jokerc", jokerc
-        # getstraight(strnoofcards, jokerc)
+    import json, pickle
+    
+    s = StareFoolishly()
+    s.createdesk()
+    s.join()
+    s.dealcard()
+    datajson = json.dumps(s.__dict__)
+    print datajson
+    datapickle = pickle.dumps(s)
+    ss = pickle.loads(datapickle)
+    ss.dealcard()
+    print json.dumps(ss.__dict__)
+    ss.tips_put()
