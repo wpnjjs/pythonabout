@@ -6,43 +6,9 @@
 @time: 2018/1/5 下午1:15
 '''
 
-import random, copy
-
-
-class Card(object):
-    def __init__(self, jokerneed=True, pairs=1):
-        self.number = 54 * pairs
-        self.pairs = pairs
-        self.suits = ['r', 'b', 's', 'd', 'j']
-        self.jokerslist = ['j0', 'j1']
-        self.cardslist = [
-            'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'ra', 'rb', 'rc', 'rd', 're',
-            'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'ba', 'bb', 'bc', 'bd', 'be',
-            's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 'sa', 'sb', 'sc', 'sd', 'se',
-            'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'da', 'db', 'dc', 'dd', 'de',
-        ]
-        self.cardslist.extend(self.jokerslist) if jokerneed else self.cardslist
-        self.cardslist *= pairs
-    
-    def deal(self, cardnumber):
-        print "cardnumber", cardnumber
-        number = cardnumber
-        dealcards = []
-        while number != 0:
-            dealcards.append(self.cardslist.pop(0))
-            number -= 1
-        else:
-            return dealcards
-    
-    def shufflecard(self):
-        random.shuffle(self.cardslist)
-        random.shuffle(self.cardslist)
-    
-    def getleavecards(self):
-        return self.cardslist
-    
-    def getleavecardsNO(self):
-        return len(self.cardslist)
+import Card
+import copy
+import itertools
 
 
 class StareFoolishly(Card):
@@ -72,9 +38,8 @@ class StareFoolishly(Card):
         self.currentplayer = ""  # 当前玩家
     
     def createdesk(self):
-        number = list("0123456789") * 6
-        idx = random.randint(0, 54)
-        self.deskno = ''.join(number[idx:idx])
+        itertools.permutations(list("1234567890"), 6)
+        # self.deskno = ''.join(number[idx:idx + 6])
     
     def join(self):
         self.playerlist = ['1', '2', '3', '4', '5', '6']
@@ -305,11 +270,6 @@ class StareFoolishly(Card):
                                 if maxcno != 'e':
                                     indexofmax = self.cardpriority.index(maxcno)
                                     nextput.append(self.cardpriority[indexofmax - lenght + 2:indexofmax + 2])
-                                    # never in this branch
-                                    # else:
-                                    #     indexofmax = self.cardpriority.index(mincno) + lenght
-                                    #     if self.cardpriority.index('e') >indexofmax:
-                                    #         nextput.append(self.cardpriority[indexofmax - lenght + 2:indexofmax + 2])
                 else:
                     finalno = maxcno
                 if finalno != 'e':
@@ -323,24 +283,27 @@ class StareFoolishly(Card):
         if rst:
             pass
         else:
-            if '3' in
-
-
-class Control(object):
-    pass
+            pass
 
 
 if __name__ == "__main__":
-    import json, pickle
-    
-    s = StareFoolishly()
-    s.createdesk()
-    s.join()
-    s.dealcard()
-    datajson = json.dumps(s.__dict__)
-    print datajson
-    datapickle = pickle.dumps(s)
-    ss = pickle.loads(datapickle)
-    ss.dealcard()
-    print json.dumps(ss.__dict__)
-    ss.tips_put()
+    pass
+    # import json, pickle
+    #
+    # s = StareFoolishly()
+    # s.createdesk()
+    # s.join()
+    # s.dealcard()
+    # datajson = json.dumps(s.__dict__)
+    # print datajson
+    # datapickle = pickle.dumps(s)
+    # ss = pickle.loads(datapickle)
+    # ss.dealcard()
+    # print json.dumps(ss.__dict__)self.roomidlist
+    # ss.tips_put()
+    # aroomobj = Room()
+    # print aroomobj.getroomid()
+    # print len(aroomobj._roomidlist)
+    # import json
+    #
+    # print json.dumps(aroomobj.__dict__)
