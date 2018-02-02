@@ -8,13 +8,14 @@
 
 
 class GameFactory(object):
-    def __init__(self, cls):
+    def __init__(self, cls, db):
         self.gameo = cls
         self.backcall = lambda x: x
     
     def parsemsg(self, msg, callback):
         self.backcall = callback
-        self.gameo.parsemsg(msg, self.backmsg)
+        gameobj = self.gameo()
+        gameobj.parsemsg(msg, self.backmsg)
     
     def backmsg(self, backmsg):
         print backmsg

@@ -6,12 +6,13 @@
 @time: 2018/1/5 下午1:15
 '''
 
-import Card
+from Card import Card
+from Game import Game
 import copy
 import itertools
 
 
-class StareFoolishly(Card):
+class StareFoolishly(Game):
     def __init__(self):
         self.events = {"deal": 0, "get": 1, "put": 2, "pass": 3, "balance": 4}
         self.cardpriority = "3456789abcde201"  # 牌值大小
@@ -36,6 +37,19 @@ class StareFoolishly(Card):
         self.outlinelist = []  # 玩家离线列表
         self.eventsrecord = []  # 事件记录[uid, event, cards, cardtype, message（可选）]
         self.currentplayer = ""  # 当前玩家
+        self.messagein = ""  # 请求消息
+        self.messageout = ""  # 返回消息
+
+    def parsemsg(self, msg, callback):
+        self.messagein = msg
+        switch = {'c': self.createdesk(msg),
+                  'j': self.join(msg),
+                  }
+        try:
+            self.messageout = switch[msg[0]]
+        except KeyError as e:
+            raise e
+        callback(self.messageout)
     
     def createdesk(self):
         itertools.permutations(list("1234567890"), 6)
