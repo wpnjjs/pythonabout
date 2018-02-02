@@ -22,8 +22,7 @@ class Engine:
     def __init__(self):
         pass
     
-    def doloop(self, msg, callback):
-        print msg
+    def do_loop(self, msg, callback):
         game_map[msg[0]].parsemsg(msg, callback)
 
 
@@ -37,4 +36,4 @@ def down(msg):
 
 if __name__ == '__main__':
     engine = Engine()
-    up("1", engine.doloop, down)
+    up("1", engine.do_loop, down)
